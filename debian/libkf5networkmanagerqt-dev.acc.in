@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<descriptor>
+
+<version>
+    5.1.1
+</version>
+
+<headers>
+    /usr/include/KF5/NetworkManagerQt/
+</headers>
+
+<libs>
+    /usr/lib/@@DEB_HOST_MULTIARCH@@/libKF5NetworkManagerQt.so
+</libs>
+
+<gcc_options>
+    -fPIC
+    -std=c++11
+    -DQT_NO_SIGNALS_SLOTS_KEYWORDS
+</gcc_options>
+
+</descriptor>

@@ -1,0 +1,4 @@
+usr/include/KF5/NetworkManagerQt/
+usr/include/KF5/networkmanagerqt_version.h
+usr/lib/*/cmake/KF5NetworkManagerQt/
+usr/lib/*/libKF5NetworkManagerQt.so

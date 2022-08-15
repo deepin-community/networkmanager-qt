@@ -1,0 +1,38 @@
+Index: networkmanager-qt/src/accesspoint.cpp
+===================================================================
+--- networkmanager-qt.orig/src/accesspoint.cpp
++++ networkmanager-qt/src/accesspoint.cpp
+@@ -37,6 +37,18 @@ NetworkManager::AccessPoint::Capabilitie
+     if (caps & NM_802_11_AP_FLAGS_PRIVACY) {
+         capFlags |= AccessPoint::Privacy;
+     }
++    if (caps & NM_802_11_AP_FLAGS_WPS) {
++        capFlags |= AccessPoint::Wps;
++    }
++    if (caps & NM_802_11_AP_FLAGS_WPS_PBC) {
++        capFlags |= AccessPoint::WpsPbc;
++    }
++    if (caps & NM_802_11_AP_FLAGS_WPS_PIN) {
++        capFlags |= AccessPoint::WpsPin;
++    }
++    if (caps & NM_802_11_AP_FLAGS_HE) {
++        capFlags |= AccessPoint::He;
++    }
+ 
+     return capFlags;
+ }
+Index: networkmanager-qt/src/accesspoint.h
+===================================================================
+--- networkmanager-qt.orig/src/accesspoint.h
++++ networkmanager-qt/src/accesspoint.h
+@@ -45,6 +45,10 @@ public:
+     enum Capability {
+         None = 0x0, /**< Null capability - says nothing about the access point */
+         Privacy = 0x1, /**< Access point supports privacy measures */
++        Wps  =  0x2, /**< Access point supports some WPS method */
++        WpsPbc = 0x4, /**< Access point supports push-button WPS */
++        WpsPin = 0x8, /**< Access point supports PIN-based WPS */
++        He = 0x10 /**< Access point support high efficiency (new feature in 802.11ax) */
+     };
+     /**
+      * Flags describing the access point's capabilities according to WPA (Wifi Protected Access)
