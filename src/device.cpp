@@ -83,6 +83,7 @@ NetworkManager::DevicePrivate::DevicePrivate(const QString &path, NetworkManager
 #endif
     , uni(path)
     , designSpeed(0)
+    , deviceType(Device::UnknownType)
     , dhcp4Config(nullptr)
     , dhcp6Config(nullptr)
     , mtu(0)
@@ -105,9 +106,14 @@ void NetworkManager::DevicePrivate::init()
     qDBusRegisterMetaType<IpV6DBusRouteList>();
     qDBusRegisterMetaType<DeviceDBusStateReason>();
 
-    // This needs to be initialized as soon as possible, because based on this property
-    // we initialize the device type
-    deviceType = convertType(deviceIface.deviceType());
+    QDBusConnection::systemBus().connect(NetworkManagerPrivate::DBUS_SERVICE,
+                                         uni,
+                                         NetworkManagerPrivate::FDO_DBUS_PROPERTIES,
+                                         QLatin1String("PropertiesChanged"),
+                                         this,
+                                         SLOT(dbusPropertiesChanged(QString, QVariantMap, QStringList)));
+    QObject::connect(&deviceIface, &OrgFreedesktopNetworkManagerDeviceInterface::StateChanged, this, &DevicePrivate::deviceStateChanged);
+
 
     deviceStatistics = DeviceStatistics::Ptr(new NetworkManager::DeviceStatistics(uni), &QObject::deleteLater);
 
@@ -117,7 +123,6 @@ void NetworkManager::DevicePrivate::init()
         propertiesChanged(initialProperties);
     }
 
-    QObject::connect(&deviceIface, &OrgFreedesktopNetworkManagerDeviceInterface::StateChanged, this, &DevicePrivate::deviceStateChanged);
 }
 
 NetworkManager::Device::MeteredStatus NetworkManager::DevicePrivate::convertMeteredStatus(uint metered)
@@ -258,7 +263,7 @@ void NetworkManager::DevicePrivate::propertyChanged(const QString &property, con
         capabilities = NetworkManager::DevicePrivate::convertCapabilities(value.toUInt());
         Q_EMIT q->capabilitiesChanged();
     } else if (property == QLatin1String("DeviceType")) {
-        deviceType = static_cast<Device::Type>(value.toUInt());
+        deviceType = convertType(value.toUInt());
     } else if (property == QLatin1String("Dhcp4Config")) {
         QDBusObjectPath dhcp4ConfigPathTmp = value.value<QDBusObjectPath>();
         if (dhcp4ConfigPathTmp.path().isNull()) {

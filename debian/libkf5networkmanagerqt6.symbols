@@ -898,6 +898,7 @@ libKF5NetworkManagerQt.so.6 libkf5networkmanagerqt6 #MINVER#
  _ZN14NetworkManager16WireGuardSettingD1Ev@Base 5.61.0
  _ZN14NetworkManager16WireGuardSettingD2Ev@Base 5.61.0
  _ZN14NetworkManager16settingsNotifierEv@Base 5.1.1+git20141203.0020+15.04
+ _ZN14NetworkManager16staticMetaObjectE@Base 5.99.0
  _ZN14NetworkManager17BridgePortSetting11setPathCostEj@Base 5.1.1+git20141203.0020+15.04
  _ZN14NetworkManager17BridgePortSetting11setPriorityEj@Base 5.1.1+git20141203.0020+15.04
  _ZN14NetworkManager17BridgePortSetting14setHairpinModeEb@Base 5.1.1+git20141203.0020+15.04
@@ -1058,6 +1059,7 @@ libKF5NetworkManagerQt.so.6 libkf5networkmanagerqt6 #MINVER#
  _ZN14NetworkManager23WirelessSecuritySetting15setLeapUsernameERK7QString@Base 5.1.1+git20141203.0020+15.04
  _ZN14NetworkManager23WirelessSecuritySetting16setWepTxKeyindexEj@Base 5.1.1+git20141203.0020+15.04
  _ZN14NetworkManager23WirelessSecuritySetting20setLeapPasswordFlagsE6QFlagsINS_7Setting14SecretFlagTypeEE@Base 5.1.1+git20141203.0020+15.04
+ _ZN14NetworkManager23WirelessSecuritySetting6setPmfENS0_3PmfE@Base 5.92.0
  _ZN14NetworkManager23WirelessSecuritySetting6setPskERK7QString@Base 5.1.1+git20141203.0020+15.04
  _ZN14NetworkManager23WirelessSecuritySetting7fromMapERK4QMapI7QString8QVariantE@Base 5.1.1+git20141203.0020+15.04
  _ZN14NetworkManager23WirelessSecuritySetting8setGroupERK5QListINS0_25WpaEncryptionCapabilitiesEE@Base 5.1.1+git20141203.0020+15.04
@@ -1915,6 +1917,7 @@ libKF5NetworkManagerQt.so.6 libkf5networkmanagerqt6 #MINVER#
  _ZNK14NetworkManager23WirelessSecuritySetting12secretsToMapEv@Base 5.1.1+git20141203.0020+15.04
  _ZNK14NetworkManager23WirelessSecuritySetting13wepTxKeyindexEv@Base 5.1.1+git20141203.0020+15.04
  _ZNK14NetworkManager23WirelessSecuritySetting17leapPasswordFlagsEv@Base 5.1.1+git20141203.0020+15.04
+ _ZNK14NetworkManager23WirelessSecuritySetting3pmfEv@Base 5.92.0
  _ZNK14NetworkManager23WirelessSecuritySetting3pskEv@Base 5.1.1+git20141203.0020+15.04
  _ZNK14NetworkManager23WirelessSecuritySetting4nameEv@Base 5.1.1+git20141203.0020+15.04
  _ZNK14NetworkManager23WirelessSecuritySetting5groupEv@Base 5.1.1+git20141203.0020+15.04
