@@ -1,0 +1,161 @@
+diff --git a/src/activeconnection.cpp b/src/activeconnection.cpp
+index 76431c5..0d539cf 100644
+--- a/src/activeconnection.cpp
++++ b/src/activeconnection.cpp
+@@ -224,6 +224,12 @@ QStringList NetworkManager::ActiveConnection::devices() const
+     return d->devices;
+ }
+ 
++quint32 NetworkManager::ActiveConnection::flags() const
++{
++    Q_D(const ActiveConnection);
++    return d->flags;
++}
++
+ void NetworkManager::ActiveConnectionPrivate::dbusPropertiesChanged(const QString &interfaceName,
+                                                                     const QVariantMap &properties,
+                                                                     const QStringList &invalidatedProperties)
+@@ -344,6 +350,9 @@ void NetworkManager::ActiveConnectionPrivate::propertyChanged(const QString &pro
+             devices.append(path.path());
+         }
+         Q_EMIT q->devicesChanged();
++    } else if (property == QLatin1String("Flags")) {
++        flags = value.toUInt();
++        Q_EMIT q->flagsChanged(flags);
+     } else {
+         qCDebug(NMQT) << Q_FUNC_INFO << "Unhandled property" << property;
+     }
+diff --git a/src/activeconnection.h b/src/activeconnection.h
+index 0d978d4..7d9f678 100644
+--- a/src/activeconnection.h
++++ b/src/activeconnection.h
+@@ -153,6 +153,11 @@ public:
+      */
+     QStringList devices() const;
+ 
++    /**
++    * Flags of Active Connection which active it with flags
++    */
++    quint32 flags() const;
++
+ Q_SIGNALS:
+     /**
+      * This signal is emitted when the connection path has changed
+@@ -219,6 +224,10 @@ Q_SIGNALS:
+      * The list of devices changed.
+      */
+     void devicesChanged();
++    /**
++      * The falgs changed.
++      */
++    void flagsChanged(quint32);
+ 
+ protected:
+     ActiveConnectionPrivate *const d_ptr;
+diff --git a/src/activeconnection_p.h b/src/activeconnection_p.h
+index 0c6edbe..44b622f 100644
+--- a/src/activeconnection_p.h
++++ b/src/activeconnection_p.h
+@@ -41,6 +41,7 @@ public:
+     bool vpn;
+     QString uuid;
+     QString master;
++    quint32 flags;
+ 
+     Q_DECLARE_PUBLIC(ActiveConnection)
+     ActiveConnection *q_ptr;
+diff --git a/src/dbus/networkmanagerinterface.h b/src/dbus/networkmanagerinterface.h
+index a493677..70bb2cc 100644
+--- a/src/dbus/networkmanagerinterface.h
++++ b/src/dbus/networkmanagerinterface.h
+@@ -187,6 +187,14 @@ public Q_SLOTS: // METHODS
+         return asyncCallWithArgumentList(QStringLiteral("ActivateConnection"), argumentList);
+     }
+ 
++    inline QDBusPendingReply<QDBusObjectPath>
++    ActivateConnection2(const QDBusObjectPath &connection, const QDBusObjectPath &device, const QDBusObjectPath &specific_object, const QVariantMap &options)
++    {
++        QList<QVariant> argumentList;
++        argumentList << QVariant::fromValue(connection) << QVariant::fromValue(device) << QVariant::fromValue(specific_object) << QVariant::fromValue(options);
++        return asyncCallWithArgumentList(QStringLiteral("ActivateConnection2"), argumentList);
++    }
++
+     inline QDBusPendingReply<QDBusObjectPath, QDBusObjectPath>
+     AddAndActivateConnection(NMVariantMapMap connection, const QDBusObjectPath &device, const QDBusObjectPath &specific_object)
+     {
+diff --git a/src/manager.cpp b/src/manager.cpp
+index a192545..bd687a7 100644
+--- a/src/manager.cpp
++++ b/src/manager.cpp
+@@ -448,6 +448,25 @@ NetworkManager::NetworkManagerPrivate::activateConnection(const QString &connect
+     return iface.ActivateConnection(connPath, QDBusObjectPath(extra_interface_parameter), QDBusObjectPath(extra_connection_parameter));
+ }
+ 
++
++QDBusPendingReply<QDBusObjectPath> NetworkManager::NetworkManagerPrivate::activateConnection2(const QString &connectionUni, const QString &interfaceUni, const QString &connectionParameter, const QVariantMap &options)
++{
++    QString extra_connection_parameter = connectionParameter;
++    QString extra_interface_parameter = interfaceUni;
++    if (extra_connection_parameter.isEmpty()) {
++        extra_connection_parameter = QLatin1String("/");
++    }
++    if (extra_interface_parameter.isEmpty()) {
++        extra_interface_parameter = QLatin1String("/");
++    }
++    // TODO store error code
++    QDBusObjectPath connPath(connectionUni);
++    QDBusObjectPath interfacePath(interfaceUni);
++    // qCDebug(NMQT) << "Activating connection" << connPath.path() << "on interface" << interfacePath.path() << "with extra" << extra_connection_parameter;
++    return iface.ActivateConnection2(connPath, QDBusObjectPath(extra_interface_parameter), QDBusObjectPath(extra_connection_parameter), options);
++}
++
++
+ QDBusPendingReply<QDBusObjectPath, QDBusObjectPath> NetworkManager::NetworkManagerPrivate::addAndActivateConnection(const NMVariantMapMap &connection,
+                                                                                                                     const QString &interfaceUni,
+                                                                                                                     const QString &connectionParameter)
+@@ -1042,6 +1061,12 @@ NetworkManager::activateConnection(const QString &connectionUni, const QString &
+     return globalNetworkManager->activateConnection(connectionUni, interfaceUni, connectionParameter);
+ }
+ 
++QDBusPendingReply<QDBusObjectPath>
++NetworkManager::activateConnection2(const QString &connectionUni, const QString &interfaceUni, const QString &connectionParameter, const QVariantMap &options)
++{
++    return globalNetworkManager->activateConnection2(connectionUni, interfaceUni, connectionParameter, options);
++}
++
+ QDBusPendingReply<> NetworkManager::deactivateConnection(const QString &activeConnectionPath)
+ {
+     return globalNetworkManager->deactivateConnection(activeConnectionPath);
+diff --git a/src/manager.h b/src/manager.h
+index ec9d2ec..6bffcf6 100644
+--- a/src/manager.h
++++ b/src/manager.h
+@@ -337,6 +337,16 @@ NETWORKMANAGERQT_EXPORT bool isWimaxHardwareEnabled();
+  */
+ NETWORKMANAGERQT_EXPORT QDBusPendingReply<QDBusObjectPath>
+ activateConnection(const QString &connectionUni, const QString &interfaceUni, const QString &connectionParameter);
++/**
++ * Activate a connection using the supplied device.
++ *
++ * @param connectionUni unique identifier for the connection to be activated
++ * @param interfaceUni unique identifier of the network interface to be activated
++ * @param connectionParameter can be used to specify extra parameters not specific to the NetworkInterface or the connection, eg which AP to use when several present with same ESSID in range (because ESSID does not guarantee that the AP is part of the network you want to join!)
++ * @param option is set option of actived
++ */
++NETWORKMANAGERQT_EXPORT QDBusPendingReply<QDBusObjectPath>
++activateConnection2(const QString &connectionUni, const QString &interfaceUni, const QString &connectionParameter, const QVariantMap &options);
+ /**
+  * Adds a new connection using the given details (if any) as a template (automatically filling in missing settings with the capabilities of the given device and
+  * specific object), then activate the new connection. Cannot be used for VPN connections at this time.
+diff --git a/src/manager_p.h b/src/manager_p.h
+index 2b859ff..9d7e2c6 100644
+--- a/src/manager_p.h
++++ b/src/manager_p.h
+@@ -88,6 +88,7 @@ public:
+     // TODO: mark it deprecated somehow?
+     bool isWimaxHardwareEnabled() const;
+     QDBusPendingReply<QDBusObjectPath> activateConnection(const QString &connectionUni, const QString &interfaceUni, const QString &connectionParameter);
++    QDBusPendingReply<QDBusObjectPath> activateConnection2(const QString &connectionUni, const QString &interfaceUni, const QString &connectionParameter, const QVariantMap &options);
+     QDBusPendingReply<QDBusObjectPath, QDBusObjectPath>
+     addAndActivateConnection(const NMVariantMapMap &connection, const QString &interfaceUni, const QString &connectionParameter);
+     QDBusPendingReply<QDBusObjectPath, QDBusObjectPath, QVariantMap>
