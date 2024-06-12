@@ -1,0 +1,16 @@
+Subject: [PATCH] chore: 修改changelog 版本号
+---
+Index: debian/changelog
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/debian/changelog b/debian/changelog
+--- a/debian/changelog	(revision 6430e36a8eb35588fd6a2f816f0ed9a94f85a6c7)
++++ b/debian/changelog	(date 1718174533026)
+@@ -1,4 +1,4 @@
+-networkmanager-qt (5.103.1-1deepin1) unstable; urgency=medium
++networkmanager-qt (5.103.0-1deepin2) unstable; urgency=medium
+ 
+   * add ActivateConnection2 interface
+ 
